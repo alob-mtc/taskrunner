@@ -2,6 +2,9 @@ package taskrunner
 
 import (
 	"context"
+	"fmt"
+	"runtime"
+
 	"golang.org/x/sync/errgroup"
 )
 
@@ -42,13 +45,23 @@ func Run[T any, S any](ctx context.Context, workerCount int, order bool, dataLis
 		}
 
 		g.Go(func() error {
+			// Recover from a task panic.
+			defer func() {
+				if value := recover(); value != nil {
+					buf := make([]byte, 8192)
+					stack := string(buf[:runtime.Stack(buf, false)])
+					err := fmt.Errorf("%+v", value)
+					// TODO: handle stack and err
+					_, _ = stack, err
+				}
+			}()
 			returnList := make([]S, 0, len(chunkData))
 			if err := processFunc(c, chunkData, returnList); err != nil {
 				return err
 			}
 			if len(returnList) > 0 {
 				taskChan <- task[S]{
-					order: i,
+					order: i, //TODO: check this
 					list:  returnList,
 				}
 			}
