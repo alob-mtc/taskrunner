@@ -14,5 +14,5 @@ _, err := taskrunner.Run(
 
 
 TODO:
-- [] Error propagation
-- [] Return value ordering
+- [ ] Error propagation
+- [ ] Return value ordering
